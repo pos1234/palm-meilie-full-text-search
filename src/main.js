@@ -59,8 +59,18 @@ export default async ({ req, res, log }) => {
       break;
     }
 
-    log(`Syncing chunk of ${documents.length} documents ...`);
-    await index.addDocuments(documents, { primaryKey: '$id' });
+    // Convert the datePosted field to a UNIX timestamp before indexing
+    const updatedDocuments = documents.map((doc) => {
+      if (doc.datePosted) {
+        // Convert to UNIX timestamp (seconds)
+        doc.datePosted = new Date(doc.datePosted).getTime() / 1000;
+      }
+      return doc;
+    });
+
+    log(`Syncing chunk of ${updatedDocuments.length} documents ...`);
+
+    await index.addDocuments(updatedDocuments, { primaryKey: '$id' });
   } while (cursor !== null);
 
   log('Sync finished.');
